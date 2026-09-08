@@ -1,0 +1,8 @@
+node_modules
+.next
+build-check
+Dockerfile
+deployment
+*.log
+tsconfig.tsbuildinfo
+.env*

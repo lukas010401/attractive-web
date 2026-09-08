@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: attractive-db
+    env_file:
+      - /opt/attractive/.env.db
+    restart: unless-stopped
+    volumes:
+      - attractive_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U attractive_user -d attractive_catalog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: /opt/attractive/api-src
+      dockerfile: Dockerfile
+    container_name: attractive-api
+    env_file:
+      - /opt/attractive/.env.api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "5010:8080"
+    volumes:
+      - attractive_uploads:/app/wwwroot/uploads
+
+  web:
+    build:
+      context: /opt/attractive/web-src
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: https://api.attractive-store.com
+        NEXT_PUBLIC_SITE_URL: https://attractive-store.com
+    container_name: attractive-web
+    env_file:
+      - /opt/attractive/.env.web
+    depends_on:
+      - api
+    restart: unless-stopped
+    ports:
+      - "3010:3000"
+
+volumes:
+  attractive_postgres:
+  attractive_uploads:
