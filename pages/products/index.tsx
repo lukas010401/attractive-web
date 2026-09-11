@@ -4,11 +4,14 @@ import { ProductCard } from '@/components/ProductCard';
 import { apiFetch } from '@/lib/api';
 import type { Metadata, ProductListItem } from '@/lib/types';
 
+const pageSize = 8;
+
 export default function ProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [metadata, setMetadata] = useState<Metadata>({ categories: [], brands: [] });
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     apiFetch<Metadata>('/api/products/metadata').then(setMetadata).catch(() => setMetadata({ categories: [], brands: [] }));
@@ -22,6 +25,12 @@ export default function ProductsPage() {
     apiFetch<ProductListItem[]>(`/api/products?${params}`).then(setProducts).catch(() => setProducts([]));
   }, [router.query.category, router.query.brand, search]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [router.query.category, router.query.brand, search]);
+
+  const pageCount = Math.max(1, Math.ceil(products.length / pageSize));
+  const paginatedProducts = products.slice((page - 1) * pageSize, page * pageSize);
   const fieldClass = 'w-full rounded-2xl border border-cocoa/10 bg-white/90 px-4 py-3 text-sm text-ink outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/10';
 
   return (
@@ -55,8 +64,29 @@ export default function ProductsPage() {
         </div>
       </div>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map(product => <ProductCard key={product.id} product={product} />)}
+        {paginatedProducts.map(product => <ProductCard key={product.id} product={product} />)}
       </div>
+      {pageCount > 1 ? (
+        <div className="mt-10 flex items-center justify-center gap-3">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => setPage(current => Math.max(1, current - 1))}
+            className="rounded-full border border-cocoa/15 bg-white/75 px-5 py-2 text-sm font-semibold text-cocoa transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Précédent
+          </button>
+          <span className="text-sm font-semibold text-ink/60">Page {page} / {pageCount}</span>
+          <button
+            type="button"
+            disabled={page >= pageCount}
+            onClick={() => setPage(current => Math.min(pageCount, current + 1))}
+            className="rounded-full border border-cocoa/15 bg-white/75 px-5 py-2 text-sm font-semibold text-cocoa transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Suivant
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
