@@ -40,8 +40,7 @@ export default function ProductsPage() {
     setPage(1);
   }, [router.query.category, router.query.brand, search]);
 
-  const pageCount = Math.max(1, Math.ceil(products.length / pageSize));
-  const paginatedProducts = products.slice((page - 1) * pageSize, page * pageSize);
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const fieldClass = 'w-full rounded-2xl border border-cocoa/10 bg-white/90 px-4 py-3 text-sm text-ink outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/10';
 
   return (
@@ -85,16 +84,18 @@ export default function ProductsPage() {
             onClick={() => setPage(current => Math.max(1, current - 1))}
             className="rounded-full border border-cocoa/15 bg-white/75 px-5 py-2 text-sm font-semibold text-cocoa transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Précédent
+            <span className="hidden sm:inline">Précédent</span>
+            <span className="sm:hidden">‹</span>
           </button>
-          <span className="text-sm font-semibold text-ink/60">Page {page} / {pageCount}</span>
+          <span className="min-w-14 text-center text-sm font-semibold text-ink/60"><span className="hidden sm:inline">Page </span>{page} / {pageCount}</span>
           <button
             type="button"
             disabled={page >= pageCount}
             onClick={() => setPage(current => Math.min(pageCount, current + 1))}
             className="rounded-full border border-cocoa/15 bg-white/75 px-5 py-2 text-sm font-semibold text-cocoa transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Suivant
+            <span className="hidden sm:inline">Suivant</span>
+            <span className="sm:hidden">›</span>
           </button>
         </div>
       ) : null}

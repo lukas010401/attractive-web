@@ -58,7 +58,7 @@ export default function HomePage() {
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-bronze">Catégories</p>
             <h2 className="mt-3 font-display text-4xl text-ink">Explorer par besoin</h2>
           </div>
-          <Link href="/products" className="hidden rounded-full border border-cocoa/20 px-5 py-2 text-sm font-semibold text-cocoa md:inline-flex">Tout voir</Link>
+          <Link href="/products" className="inline-flex rounded-full border border-cocoa/20 px-5 py-2 text-sm font-semibold text-cocoa">Tout voir</Link>
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {metadata.categories.map(category => (
