@@ -8,7 +8,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>Attractive Cosmetics Shop</title>
+        <title>Attractive Store Madagascar</title>
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
       <CartProvider>
