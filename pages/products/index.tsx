@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { apiFetch } from '@/lib/api';
 import type { Metadata, PaginatedResponse, ProductListItem } from '@/lib/types';
@@ -13,12 +13,16 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     apiFetch<Metadata>('/api/products/metadata').then(setMetadata).catch(() => setMetadata({ categories: [], brands: [] }));
   }, []);
 
   useEffect(() => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('pageSize', String(pageSize));
@@ -27,10 +31,12 @@ export default function ProductsPage() {
     if (search.trim()) params.set('q', search.trim());
     apiFetch<PaginatedResponse<ProductListItem>>(`/api/products?${params}`)
       .then(result => {
+        if (requestId !== requestIdRef.current) return;
         setProducts(result.items);
         setTotalCount(result.totalCount);
       })
       .catch(() => {
+        if (requestId !== requestIdRef.current) return;
         setProducts([]);
         setTotalCount(0);
       });

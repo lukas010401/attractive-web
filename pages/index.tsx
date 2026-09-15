@@ -62,7 +62,7 @@ export default function HomePage() {
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {metadata.categories.map(category => (
-            <Link key={category.id} href={`/products?category=${category.slug}`} className="rounded-[1.5rem] border border-cocoa/10 bg-white/65 p-5 font-display text-2xl text-cocoa shadow-soft">
+            <Link key={category.id} href={`/products?category=${encodeURIComponent(category.slug)}`} className="rounded-[1.5rem] border border-cocoa/10 bg-white/65 p-5 font-display text-2xl text-cocoa shadow-soft">
               {category.name}
             </Link>
           ))}
