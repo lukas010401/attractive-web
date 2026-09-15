@@ -1,14 +1,21 @@
 import type { AppProps } from 'next/app';
+import Head from 'next/head';
 import { CartProvider } from '@/lib/cart';
 import { Layout } from '@/components/Layout';
 import '@/styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <CartProvider>
+    <>
+      <Head>
+        <title>Attractive Cosmetics Shop</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+      </Head>
+      <CartProvider>
       <Layout>
         <Component {...pageProps} />
       </Layout>
-    </CartProvider>
+      </CartProvider>
+    </>
   );
 }
