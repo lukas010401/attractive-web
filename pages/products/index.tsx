@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { apiFetch } from '@/lib/api';
-import type { Metadata, ProductListItem } from '@/lib/types';
+import type { Metadata, PaginatedResponse, ProductListItem } from '@/lib/types';
 
 const pageSize = 8;
 
@@ -12,6 +12,7 @@ export default function ProductsPage() {
   const [metadata, setMetadata] = useState<Metadata>({ categories: [], brands: [] });
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     apiFetch<Metadata>('/api/products/metadata').then(setMetadata).catch(() => setMetadata({ categories: [], brands: [] }));
@@ -19,11 +20,21 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('pageSize', String(pageSize));
     if (router.query.category) params.set('category', String(router.query.category));
     if (router.query.brand) params.set('brand', String(router.query.brand));
     if (search.trim()) params.set('q', search.trim());
-    apiFetch<ProductListItem[]>(`/api/products?${params}`).then(setProducts).catch(() => setProducts([]));
-  }, [router.query.category, router.query.brand, search]);
+    apiFetch<PaginatedResponse<ProductListItem>>(`/api/products?${params}`)
+      .then(result => {
+        setProducts(result.items);
+        setTotalCount(result.totalCount);
+      })
+      .catch(() => {
+        setProducts([]);
+        setTotalCount(0);
+      });
+  }, [router.query.category, router.query.brand, search, page]);
 
   useEffect(() => {
     setPage(1);
@@ -39,7 +50,7 @@ export default function ProductsPage() {
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-bronze">Catalogue</p>
         <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
           <h1 className="font-display text-5xl text-ink">Produits cosmétiques</h1>
-          <span className="text-sm text-ink/55">{products.length} produit(s)</span>
+          <span className="text-sm text-ink/55">{totalCount} produit(s)</span>
         </div>
 
         <div className="mt-8 grid gap-4 rounded-[1.5rem] border border-cocoa/10 bg-cream/65 p-4 md:grid-cols-[1fr_230px_230px]">
@@ -64,7 +75,7 @@ export default function ProductsPage() {
         </div>
       </div>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {paginatedProducts.map(product => <ProductCard key={product.id} product={product} />)}
+        {products.map(product => <ProductCard key={product.id} product={product} />)}
       </div>
       {pageCount > 1 ? (
         <div className="mt-10 flex items-center justify-center gap-3">

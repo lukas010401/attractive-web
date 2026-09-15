@@ -3,14 +3,14 @@ import { AppLink as Link } from '@/components/AppLink';
 import { BrandLogo } from '@/components/BrandLogo';
 import { ProductCard } from '@/components/ProductCard';
 import { apiFetch } from '@/lib/api';
-import type { Metadata, ProductListItem } from '@/lib/types';
+import type { Metadata, PaginatedResponse, ProductListItem } from '@/lib/types';
 
 export default function HomePage() {
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [metadata, setMetadata] = useState<Metadata>({ categories: [], brands: [] });
 
   useEffect(() => {
-    apiFetch<ProductListItem[]>('/api/products?featured=true').then(setProducts).catch(() => setProducts([]));
+    apiFetch<PaginatedResponse<ProductListItem>>('/api/products?featured=true&pageSize=8').then(result => setProducts(result.items)).catch(() => setProducts([]));
     apiFetch<Metadata>('/api/products/metadata').then(setMetadata).catch(() => setMetadata({ categories: [], brands: [] }));
   }, []);
 
