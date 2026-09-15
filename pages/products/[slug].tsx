@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
@@ -29,7 +28,7 @@ export default function ProductDetailPage() {
       <div className="rounded-[2rem] bg-sand p-4">
         {heroImage ? (
           <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem]">
-            <Image src={mediaUrl(heroImage)} alt={displayName} layout="fill" objectFit="cover" sizes="(max-width: 768px) 100vw, 50vw" priority />
+            <img src={mediaUrl(heroImage)} alt={displayName} loading="eager" decoding="async" className="h-full w-full object-cover" />
           </div>
         ) : (
           <div className="flex aspect-[4/5] items-center justify-center rounded-[1.5rem] bg-white font-display text-5xl text-cocoa/30">Attractive</div>

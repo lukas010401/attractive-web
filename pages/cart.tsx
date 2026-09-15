@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { useEffect } from 'react';
 import { AppLink as Link } from '@/components/AppLink';
 import { apiFetch, mediaUrl } from '@/lib/api';
@@ -42,7 +41,7 @@ export default function CartPage() {
                 <div key={item.productId} className="grid gap-4 rounded-[1.5rem] border border-cocoa/10 bg-white/70 p-4 sm:grid-cols-[96px_1fr_auto]">
                   <div className="relative h-24 w-24 overflow-hidden rounded-2xl bg-sand">
                     {item.imageUrl ? (
-                      <Image src={mediaUrl(item.imageUrl)} alt={displayName} layout="fill" objectFit="cover" sizes="96px" />
+                      <img src={mediaUrl(item.imageUrl)} alt={displayName} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center font-display text-xl text-cocoa/30">Attractive</div>
                     )}

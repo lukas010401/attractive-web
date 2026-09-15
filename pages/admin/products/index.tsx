@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { AppLink as Link } from '@/components/AppLink';
 import { AdminGuard } from '@/components/AdminGuard';
 import { AdminShell } from '@/components/AdminShell';
@@ -98,7 +97,7 @@ export default function AdminProductsPage() {
                       <td className="px-5 py-4">
                         <Link href={`/admin/products/${product.id}`} className="flex items-center gap-3 hover:text-cocoa">
                           <span className="relative h-12 w-12 overflow-hidden rounded-xl bg-sand">
-                            {product.primaryImageUrl ? <Image src={mediaUrl(product.primaryImageUrl)} alt={product.name} layout="fill" objectFit="cover" sizes="48px" /> : null}
+                            {product.primaryImageUrl ? <img src={mediaUrl(product.primaryImageUrl)} alt={product.name} loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
                           </span>
                           <span className="font-semibold">{product.name}</span>
                         </Link>

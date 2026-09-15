@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { AppLink as Link } from './AppLink';
 import { mediaUrl } from '@/lib/api';
 import { useCart } from '@/lib/cart';
@@ -31,15 +30,14 @@ export function ProductCard({ product }: { product: ProductListItem }) {
   return (
     <article className="group overflow-hidden rounded-[1.75rem] border border-cocoa/10 bg-white/75 shadow-soft transition hover:-translate-y-1 hover:bg-white">
       <Link href={`/products/${product.slug}`} className="block">
-        <div className="relative aspect-[4/5] bg-sand">
+        <div className="relative aspect-[4/5] overflow-hidden bg-sand">
           {product.primaryImageUrl ? (
-            <Image
+            <img
               src={mediaUrl(product.primaryImageUrl)}
               alt={displayName}
-              layout="fill"
-              objectFit="cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw"
-              className="transition duration-500 group-hover:scale-105"
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-center font-display text-3xl text-cocoa/35">
