@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppLink as Link } from '@/components/AppLink';
 import { AdminGuard } from '@/components/AdminGuard';
 import { AdminShell } from '@/components/AdminShell';
-import { apiFetch } from '@/lib/api';
+import { apiFetch, mediaUrl } from '@/lib/api';
 import type { Brand, PaginatedResponse } from '@/lib/types';
 
 const pageSize = 8;
@@ -73,9 +73,10 @@ export default function AdminBrandsPage() {
 
         <div className="mt-6 overflow-hidden rounded-[1.5rem] bg-white/80 shadow-soft">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead className="border-b border-cocoa/10 bg-sand/60 text-xs uppercase tracking-wide text-ink/55">
                 <tr>
+                  <th className="px-5 py-4">Logo</th>
                   <th className="px-5 py-4">Marque</th>
                   <th className="px-5 py-4">Slug</th>
                   <th className="px-5 py-4">Statut</th>
@@ -84,13 +85,18 @@ export default function AdminBrandsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={3} className="px-5 py-10 text-center text-ink/50">Chargement des marques...</td>
+                    <td colSpan={4} className="px-5 py-10 text-center text-ink/50">Chargement des marques...</td>
                   </tr>
                 ) : brands.length ? (
                   brands.map(brand => {
                     const isActive = brand.isActive ?? true;
                     return (
                       <tr key={brand.id} className="border-b border-cocoa/10 transition hover:bg-sand/40">
+                        <td className="px-5 py-4">
+                          <Link href={`/admin/brands/${brand.id}`} className="flex h-12 w-16 items-center justify-center overflow-hidden rounded-xl bg-sand p-2 hover:bg-cream">
+                            {brand.logoUrl ? <img src={mediaUrl(brand.logoUrl)} alt={brand.name} loading="lazy" decoding="async" className="max-h-full max-w-full object-contain" /> : <span className="text-xs font-semibold text-cocoa/40">Logo</span>}
+                          </Link>
+                        </td>
                         <td className="px-5 py-4 font-semibold">
                           <Link href={`/admin/brands/${brand.id}`} className="hover:text-cocoa">{brand.name}</Link>
                         </td>
@@ -105,7 +111,7 @@ export default function AdminBrandsPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={3} className="px-5 py-10 text-center text-ink/50">Aucune marque trouvée.</td>
+                    <td colSpan={4} className="px-5 py-10 text-center text-ink/50">Aucune marque trouvée.</td>
                   </tr>
                 )}
               </tbody>

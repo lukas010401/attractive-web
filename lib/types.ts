@@ -52,6 +52,7 @@ export type Brand = {
   name: string;
   slug: string;
   isActive?: boolean;
+  logoUrl?: string | null;
 };
 
 export type Metadata = {

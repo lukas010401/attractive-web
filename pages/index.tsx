@@ -1,19 +1,16 @@
-import { useEffect, useState } from 'react';
-import { AppLink as Link } from '@/components/AppLink';
+﻿import { AppLink as Link } from '@/components/AppLink';
 import { BrandLogo } from '@/components/BrandLogo';
 import { ProductCard } from '@/components/ProductCard';
-import { apiFetch } from '@/lib/api';
+import { API_BASE_URL, mediaUrl } from '@/lib/api';
+import type { GetServerSideProps } from 'next';
 import type { Metadata, PaginatedResponse, ProductListItem } from '@/lib/types';
 
-export default function HomePage() {
-  const [products, setProducts] = useState<ProductListItem[]>([]);
-  const [metadata, setMetadata] = useState<Metadata>({ categories: [], brands: [] });
+type HomePageProps = {
+  products: ProductListItem[];
+  metadata: Metadata;
+};
 
-  useEffect(() => {
-    apiFetch<PaginatedResponse<ProductListItem>>('/api/products?featured=true&pageSize=8').then(result => setProducts(result.items)).catch(() => setProducts([]));
-    apiFetch<Metadata>('/api/products/metadata').then(setMetadata).catch(() => setMetadata({ categories: [], brands: [] }));
-  }, []);
-
+export default function HomePage({ products, metadata }: HomePageProps) {
   return (
     <>
       <section className="relative overflow-hidden border-b border-cocoa/10 bg-cream">
@@ -62,8 +59,25 @@ export default function HomePage() {
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {metadata.categories.map(category => (
-            <Link key={category.id} href={`/products?category=${encodeURIComponent(category.slug)}`} className="rounded-[1.5rem] border border-cocoa/10 bg-white/65 p-5 font-display text-2xl text-cocoa shadow-soft">
+            <Link key={category.id} href={`/products?category=${encodeURIComponent(category.slug)}`} className="flex min-h-20 items-center justify-center rounded-[1.5rem] border border-cocoa/10 bg-white/65 p-5 text-center font-display text-2xl text-cocoa shadow-soft">
               {category.name}
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-12 md:px-6">
+        <div className="flex items-end justify-between gap-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-bronze">Marques</p>
+            <h2 className="mt-3 font-display text-4xl text-ink">Explorer par marque</h2>
+          </div>
+          <Link href="/products" className="inline-flex rounded-full border border-cocoa/20 px-5 py-2 text-sm font-semibold text-cocoa">Tout voir</Link>
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {metadata.brands.map(brand => (
+            <Link key={brand.id} href={`/products?brand=${encodeURIComponent(brand.slug)}`} className="flex min-h-24 items-center justify-center rounded-[1.5rem] border border-cocoa/10 bg-white p-5 text-center font-display text-2xl text-cocoa shadow-soft transition hover:-translate-y-0.5">
+              {brand.logoUrl ? <img src={mediaUrl(brand.logoUrl)} alt={brand.name} loading="lazy" decoding="async" className="max-h-14 max-w-full bg-white object-contain mix-blend-multiply" /> : brand.name}
             </Link>
           ))}
         </div>
@@ -75,7 +89,7 @@ export default function HomePage() {
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {products.length ? products.map(product => <ProductCard key={product.id} product={product} />) : (
             <div className="rounded-[1.5rem] border border-dashed border-cocoa/20 bg-white/50 p-8 text-ink/60">
-              Aucun produit publié pour le moment. Ajoute les premiers produits dans le back-office.
+               Aucun produit publié pour le moment.
             </div>
           )}
         </div>
@@ -83,3 +97,32 @@ export default function HomePage() {
     </>
   );
 }
+
+async function fetchJson<T>(path: string): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`);
+  if (!response.ok) throw new Error(`Failed to fetch ${path}`);
+  return response.json();
+}
+
+export const getServerSideProps: GetServerSideProps<HomePageProps> = async () => {
+  try {
+    const [productsResult, metadata] = await Promise.all([
+      fetchJson<PaginatedResponse<ProductListItem>>('/api/products?featured=true&pageSize=8'),
+      fetchJson<Metadata>('/api/products/metadata')
+    ]);
+
+    return {
+      props: {
+        products: productsResult.items,
+        metadata
+      }
+    };
+  } catch {
+    return {
+      props: {
+        products: [],
+        metadata: { categories: [], brands: [] }
+      }
+    };
+  }
+};
