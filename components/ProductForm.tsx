@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { apiFetch, mediaUrl, uploadFiles } from '@/lib/api';
-import type { Brand, Category, ProductDetail } from '@/lib/types';
+import type { Brand, Category, ProductDetail, ProductImage } from '@/lib/types';
 
 type ProductFormProps = {
   product?: ProductDetail | null;
@@ -66,6 +66,8 @@ export function ProductForm({ product }: ProductFormProps) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [files, setFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<string[]>([]);
+  const [savedImages, setSavedImages] = useState<ProductImage[]>(product?.images || []);
+  const [deletingImageId, setDeletingImageId] = useState('');
   const [error, setError] = useState('');
   const [form, setForm] = useState<ProductFormState>(initialForm);
 
@@ -94,6 +96,7 @@ export function ProductForm({ product }: ProductFormProps) {
       isFeatured: product.isFeatured,
       specificationsText: product.specifications.map(spec => `${spec.name}: ${spec.value}`).join('\n')
     });
+    setSavedImages(product.images || []);
   }, [product]);
 
   useEffect(() => {
@@ -127,6 +130,23 @@ export function ProductForm({ product }: ProductFormProps) {
     }
 
     return { specs, error: '' };
+  }
+
+  async function deleteSavedImage(image: ProductImage) {
+    if (!product?.id || deletingImageId) return;
+    if (!window.confirm('Supprimer cette image ?')) return;
+
+    setError('');
+    setDeletingImageId(image.id);
+
+    try {
+      await apiFetch<void>(`/api/admin/products/${product.id}/images/${image.id}`, { method: 'DELETE' }, true);
+      setSavedImages(current => current.filter(item => item.id !== image.id));
+    } catch (err) {
+      setError(friendlyError(err));
+    } finally {
+      setDeletingImageId('');
+    }
   }
 
   async function submit(event: FormEvent) {
@@ -276,16 +296,24 @@ export function ProductForm({ product }: ProductFormProps) {
             className="block w-full min-w-0 rounded-2xl border border-cocoa/15 bg-white px-4 py-3 text-sm file:mr-4 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-2 file:text-sm file:font-semibold file:text-cream"
           />
         </Field>
-        {(product?.images?.length || filePreviews.length) ? (
+        {(savedImages.length || filePreviews.length) ? (
           <div className="grid gap-4">
-            {product?.images?.length ? (
+            {savedImages.length ? (
               <div>
                 <h3 className="text-sm font-semibold text-ink">Images enregistrées</h3>
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
-                  {product.images.map(image => (
-                    <div key={image.id} className="overflow-hidden rounded-2xl border border-cocoa/10 bg-sand">
+                  {savedImages.map(image => (
+                    <div key={image.id} className="relative overflow-hidden rounded-2xl border border-cocoa/10 bg-sand">
                       <div className="relative h-32 w-full">
                         <img src={mediaUrl(image.url)} alt="Produit" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => deleteSavedImage(image)}
+                          disabled={deletingImageId === image.id}
+                          className="absolute right-2 top-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-white disabled:opacity-60"
+                        >
+                          {deletingImageId === image.id ? 'Suppression...' : 'Supprimer'}
+                        </button>
                       </div>
                       {image.isPrimary ? <div className="bg-cocoa px-3 py-1 text-xs font-semibold text-white">Image principale</div> : null}
                     </div>
