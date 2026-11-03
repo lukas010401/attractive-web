@@ -15,6 +15,14 @@ export type ProductListItem = {
   isFeatured: boolean;
 };
 
+export type ProductShowcaseItem = {
+  id: string;
+  name: string;
+  slug: string;
+  brandName?: string | null;
+  primaryImageUrl: string;
+};
+
 export type ProductImage = {
   id: string;
   url: string;

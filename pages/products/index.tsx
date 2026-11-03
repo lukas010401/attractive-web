@@ -14,37 +14,50 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const requestIdRef = useRef(0);
+  const filtersRef = useRef('');
+  const sort = router.query.sort === 'price-asc' || router.query.sort === 'price-desc' ? router.query.sort : '';
 
   useEffect(() => {
     apiFetch<Metadata>('/api/products/metadata').then(setMetadata).catch(() => setMetadata({ categories: [], brands: [] }));
   }, []);
 
   useEffect(() => {
+    if (!router.isReady) return;
+
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
 
+    const filtersKey = JSON.stringify([router.query.category, router.query.brand, search, sort]);
+    if (filtersRef.current !== filtersKey) {
+      filtersRef.current = filtersKey;
+      if (page !== 1) {
+        setPage(1);
+        return;
+      }
+    }
+
+    const controller = new AbortController();
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('pageSize', String(pageSize));
     if (router.query.category) params.set('category', String(router.query.category));
     if (router.query.brand) params.set('brand', String(router.query.brand));
     if (search.trim()) params.set('q', search.trim());
-    apiFetch<PaginatedResponse<ProductListItem>>(`/api/products?${params}`)
+    if (sort) params.set('sort', sort);
+    apiFetch<PaginatedResponse<ProductListItem>>(`/api/products?${params}`, { signal: controller.signal })
       .then(result => {
-        if (requestId !== requestIdRef.current) return;
+        if (controller.signal.aborted || requestId !== requestIdRef.current) return;
         setProducts(result.items);
         setTotalCount(result.totalCount);
       })
       .catch(() => {
-        if (requestId !== requestIdRef.current) return;
+        if (controller.signal.aborted || requestId !== requestIdRef.current) return;
         setProducts([]);
         setTotalCount(0);
       });
-  }, [router.query.category, router.query.brand, search, page]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [router.query.category, router.query.brand, search]);
+    return () => controller.abort();
+  }, [router.isReady, router.query.category, router.query.brand, search, sort, page]);
 
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const fieldClass = 'w-full rounded-2xl border border-cocoa/10 bg-white/90 px-4 py-3 text-sm text-ink outline-none transition focus:border-cocoa focus:ring-2 focus:ring-cocoa/10';
@@ -58,7 +71,7 @@ export default function ProductsPage() {
           <span className="text-sm text-ink/55">{totalCount} produit(s)</span>
         </div>
 
-        <div className="mt-8 grid gap-4 rounded-[1.5rem] border border-cocoa/10 bg-cream/65 p-4 md:grid-cols-[1fr_230px_230px]">
+        <div className="mt-8 grid gap-4 rounded-[1.5rem] border border-cocoa/10 bg-cream/65 p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_190px_190px_190px]">
           <label className="grid gap-2">
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cocoa/70">Recherche</span>
             <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Nom du produit..." className={fieldClass} />
@@ -75,6 +88,14 @@ export default function ProductsPage() {
             <select value={router.query.brand || ''} onChange={event => router.push({ pathname: '/products', query: { ...router.query, brand: event.target.value || undefined } })} className={fieldClass}>
               <option value="">Toutes les marques</option>
               {metadata.brands.map(brand => <option key={brand.id} value={brand.slug}>{brand.name}</option>)}
+            </select>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cocoa/70">Trier par</span>
+            <select value={sort} onChange={event => router.push({ pathname: '/products', query: { ...router.query, sort: event.target.value || undefined } }, undefined, { scroll: false })} className={fieldClass}>
+              <option value="">Notre sélection</option>
+              <option value="price-asc">Prix croissant</option>
+              <option value="price-desc">Prix décroissant</option>
             </select>
           </label>
         </div>

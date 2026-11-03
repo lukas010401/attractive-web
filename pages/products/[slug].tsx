@@ -43,6 +43,9 @@ export default function ProductDetailPage() {
           Ajouter au panier
         </button>
         {isLowStock(product.stockQuantity) ? <p className="mt-3 text-sm font-semibold text-cocoa">{stockLabel}</p> : null}
+        <a href="#contact" className="mt-5 inline-block rounded text-sm font-medium text-cocoa underline underline-offset-4 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cocoa">
+          Besoin d’aide pour choisir ?
+        </a>
         <div className="mt-10 rounded-[1.5rem] border border-cocoa/10 bg-white/60 p-6">
           <h2 className="font-display text-2xl text-ink">Spécifications</h2>
           <div className="mt-4 grid gap-3">

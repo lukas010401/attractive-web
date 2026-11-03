@@ -1,51 +1,59 @@
 ﻿import { AppLink as Link } from '@/components/AppLink';
-import { BrandLogo } from '@/components/BrandLogo';
 import { ProductCard } from '@/components/ProductCard';
 import { API_BASE_URL, mediaUrl } from '@/lib/api';
+import { productDisplayName } from '@/lib/product-title';
 import type { GetServerSideProps } from 'next';
-import type { Metadata, PaginatedResponse, ProductListItem } from '@/lib/types';
+import type { Metadata, PaginatedResponse, ProductListItem, ProductShowcaseItem } from '@/lib/types';
 
 type HomePageProps = {
   products: ProductListItem[];
   metadata: Metadata;
+  showcaseProducts: ProductShowcaseItem[];
 };
 
-export default function HomePage({ products, metadata }: HomePageProps) {
+export default function HomePage({ products, metadata, showcaseProducts }: HomePageProps) {
+  const showcaseGridClass = showcaseProducts.length === 1 ? 'mx-auto max-w-44 grid-cols-1' : showcaseProducts.length === 2 ? 'mx-auto max-w-sm grid-cols-2' : 'grid-cols-3';
+
   return (
     <>
-      <section className="relative overflow-hidden border-b border-cocoa/10 bg-cream">
-        <div className="absolute inset-0 cosmetic-surface" />
-        <div className="absolute -left-24 top-8 h-72 w-72 rounded-full bg-white/70 blur-3xl" />
-        <div className="absolute right-[-8rem] top-16 h-96 w-96 rounded-full bg-bronze/20 blur-3xl" />
-        <div className="absolute bottom-[-9rem] left-1/3 h-80 w-80 rounded-full bg-linen/80 blur-3xl" />
-        <div className="relative mx-auto min-h-[560px] max-w-7xl px-4 py-20 md:px-6">
-          <div className="max-w-4xl">
-            <h1 className="max-w-3xl font-display text-5xl leading-tight text-ink md:text-7xl">
-              Beauté douce, sélection claire, commande rapide.
+      <section className="overflow-hidden border-b border-cocoa/10 bg-cream">
+        <div className={`mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 md:px-6 lg:gap-12 lg:py-12 ${showcaseProducts.length ? 'lg:grid-cols-2' : ''}`}>
+          <div className="max-w-xl">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-bronze">Attractive Cosmetics</p>
+            <h1 className="mt-4 font-display text-4xl leading-[1.1] text-ink sm:text-5xl lg:text-6xl">
+              Vos essentiels beauté à Madagascar.
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-ink/65">
-              Découvrez les produits Attractive, consultez les prix et spécifications, ajoutez au panier et commandez sans compte.
+            <p className="mt-5 max-w-lg text-base leading-7 text-ink/65 sm:text-lg sm:leading-8">
+              Soins, maquillage et parfums : découvrez notre sélection, avec des prix affichés et une commande sans compte.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/products" className="rounded-full bg-ink px-6 py-3 text-sm font-semibold text-cream hover:bg-cocoa">
-                Voir le catalogue
-              </Link>
-              <Link href="/checkout" className="rounded-full border border-cocoa/25 bg-white/35 px-6 py-3 text-sm font-semibold text-cocoa hover:bg-white/70">
-                Commander maintenant
+            <div className="mt-7">
+              <Link href="/products" className="inline-flex rounded-full bg-ink px-6 py-3 text-sm font-semibold text-cream hover:bg-cocoa focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cocoa">
+                Découvrir nos produits
               </Link>
             </div>
           </div>
-        </div>
-      </section>
+          {showcaseProducts.length ? (
+            <div className="mx-auto w-full max-w-lg rounded-[2rem] border border-cocoa/10 bg-sand/70 px-5 py-8 sm:px-8 sm:py-10 lg:py-12">
+              <div className={`grid items-center gap-3 sm:gap-4 ${showcaseGridClass}`}>
+                {showcaseProducts.map((product, index) => {
+                  const isCenter = showcaseProducts.length === 3 && index === 1;
+                  const positionClass = showcaseProducts.length === 1 || isCenter ? '' : index === 0 ? '-rotate-6' : 'rotate-6';
 
-      <section className="mx-auto max-w-7xl px-4 py-10 md:px-6">
-        <div className="rounded-[2rem] border border-cocoa/10 bg-white/70 p-8 text-center shadow-soft">
-          <div className="mx-auto flex justify-center">
-            <BrandLogo />
-          </div>
-          <p className="mx-auto mt-4 max-w-2xl text-ink/65">
-            Trouvez vos produits, ajoutez-les au panier et commandez facilement en quelques étapes.
-          </p>
+                  return (
+                    <Link key={product.id} href={`/products/${product.slug}`} className={`block overflow-hidden rounded-2xl border border-cocoa/10 bg-white p-2 shadow-soft transition hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cocoa sm:p-3 ${isCenter ? 'aspect-[3/5]' : 'aspect-[3/4]'} ${positionClass}`}>
+                      <img
+                        src={mediaUrl(product.primaryImageUrl)}
+                        alt={productDisplayName(product)}
+                        loading="eager"
+                        decoding="async"
+                        className="h-full w-full object-contain"
+                      />
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -99,30 +107,23 @@ export default function HomePage({ products, metadata }: HomePageProps) {
 }
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`);
+  const response = await fetch(`${API_BASE_URL}${path}`, { signal: AbortSignal.timeout(5000) });
   if (!response.ok) throw new Error(`Failed to fetch ${path}`);
   return response.json();
 }
 
 export const getServerSideProps: GetServerSideProps<HomePageProps> = async () => {
-  try {
-    const [productsResult, metadata] = await Promise.all([
-      fetchJson<PaginatedResponse<ProductListItem>>('/api/products?featured=true&pageSize=8'),
-      fetchJson<Metadata>('/api/products/metadata')
-    ]);
+  const [productsResult, metadata, showcaseProducts] = await Promise.all([
+    fetchJson<PaginatedResponse<ProductListItem>>('/api/products?featured=true&pageSize=8').catch(() => null),
+    fetchJson<Metadata>('/api/products/metadata').catch(() => ({ categories: [], brands: [] })),
+    fetchJson<ProductShowcaseItem[]>('/api/products/showcase').catch(() => [])
+  ]);
 
-    return {
-      props: {
-        products: productsResult.items,
-        metadata
-      }
-    };
-  } catch {
-    return {
-      props: {
-        products: [],
-        metadata: { categories: [], brands: [] }
-      }
-    };
-  }
+  return {
+    props: {
+      products: productsResult?.items || [],
+      metadata,
+      showcaseProducts
+    }
+  };
 };
